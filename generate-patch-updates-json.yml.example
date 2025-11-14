@@ -1,0 +1,95 @@
+name: Generate Patch Updates JSON
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - '*.lua'
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+      
+      - name: Generate updates.json for patches
+        run: |
+          echo '{' > updates.json
+          echo '  "patches": [' >> updates.json
+          first=true
+          for file in *.lua; do
+            if [ -f "$file" ] && [[ ! "$file" =~ \.disabled$ ]]; then
+              if [ "$first" = true ]; then
+                first=false
+              else
+                echo ',' >> updates.json
+              fi
+              
+              # Extract patch name (without .lua extension)
+              patch_name="${file%.lua}"
+              
+              # Calculate MD5 hash
+              md5=$(md5sum "$file" | cut -d' ' -f1)
+              
+              # Try to extract description from patch file comments (first few comment lines)
+              description=""
+              while IFS= read -r line; do
+                if [[ "$line" =~ ^--[[:space:]]*[^[].*$ ]] && [[ ! "$line" =~ ^--[[:space:]]*\[\[ ]] && [[ ! "$line" =~ ^--[[:space:]]*\]\] ]]; then
+                  comment="${line#--}"
+                  comment=$(echo "$comment" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                  # Skip decorative lines and template text
+                  if [[ ! "$comment" =~ ^[=_-\.\*#]+$ ]] && [[ ! "$comment" =~ [Ee]dit ]] && [[ ! "$comment" =~ ^@ ]] && [[ ! "$comment" =~ ^version ]] && [[ ! "$comment" =~ ^requires ]]; then
+                    if [ -z "$description" ]; then
+                      description="$comment"
+                    else
+                      description="$description\n$comment"
+                    fi
+                    # Limit to first 3 meaningful comment lines
+                    if [ $(echo -e "$description" | wc -l) -ge 3 ]; then
+                      break
+                    fi
+                  fi
+                elif [[ ! "$line" =~ ^-- ]] && [ -n "$description" ]; then
+                  # Stop at first non-comment line after description
+                  break
+                fi
+              done < "$file"
+              
+              # Escape description for JSON
+              if [ -n "$description" ]; then
+                description=$(echo -e "$description" | sed 's/"/\\"/g' | tr '\n' ' ')
+                description="${description% }"
+              fi
+              
+              echo '    {' >> updates.json
+              echo "      \"name\": \"$patch_name\"," >> updates.json
+              echo "      \"filename\": \"$file\"," >> updates.json
+              if [ -n "$description" ]; then
+                echo "      \"description\": \"$description\"," >> updates.json
+              fi
+              echo "      \"md5\": \"$md5\"" >> updates.json
+              echo -n '    }' >> updates.json
+            fi
+          done
+          echo '' >> updates.json
+          echo '  ]' >> updates.json
+          echo '}' >> updates.json
+          cat updates.json
+      
+      - name: Commit and push
+        if: github.event_name == 'push'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add updates.json
+          if ! git diff --staged --quiet; then
+            git commit -m "Update updates.json with MD5 hashes"
+            git push
+          fi
+
