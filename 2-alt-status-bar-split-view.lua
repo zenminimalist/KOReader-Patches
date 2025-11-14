@@ -1,13 +1,16 @@
 --[[
     KOReader Alt Status Bar Patch
     Version: 4.0
+    
     This patch creates an alternative status bar with three sections:
     - Left: Book Title — Author
     - Center: Time
     - Right: Current Page of Total Pages | Progress %
 
+    Notes:
+    Additionally, it removes the margin/padding left and right, so it matches the buttom progress bar.
     Patch is based on my own preference. Don't like it? Too bad, create your own : )
-    Based on two of the patches from https://github.com/joshuacant/KOReader.patches & 2-reader-header-centered.lua AND 2-reader-header-cornered.lua
+    Mostly based on the code of two of the patches from https://github.com/joshuacant/KOReader.patches & 2-reader-header-centered.lua AND 2-reader-header-cornered.lua
 --]]
 
 local Blitbuffer = require("ffi/blitbuffer")
