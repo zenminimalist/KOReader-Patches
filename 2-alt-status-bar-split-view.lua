@@ -5,8 +5,10 @@
     - Left: Book Title — Author
     - Center: Time
     - Right: Current Page of Total Pages | Progress %
-    
+
+    based on my preference. Don't like, it bad, create your own : )
     Only displayed for reflowable documents (EPUB, etc.), not fixed layout (PDF, CBZ).
+    Based on two of the patches from https://github.com/joshuacant/KOReader.patches (2-reader-header-centered.lua AND 2-reader-header-cornered.lua)
 --]]
 
 local Blitbuffer = require("ffi/blitbuffer")
