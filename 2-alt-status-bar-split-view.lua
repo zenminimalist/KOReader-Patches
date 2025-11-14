@@ -6,8 +6,8 @@
     - Center: Time
     - Right: Current Page of Total Pages | Progress %
 
-    Patches are based on my preference. Don't like, it bad, create your own : )
-    Based on two of the patches from https://github.com/joshuacant/KOReader.patches (2-reader-header-centered.lua AND 2-reader-header-cornered.lua)
+    Patches are based on my preference. Don't like it? Too bad, create your own : )
+    Based on two of the patches from https://github.com/joshuacant/KOReader.patches & 2-reader-header-centered.lua AND 2-reader-header-cornered.lua
 --]]
 
 local Blitbuffer = require("ffi/blitbuffer")
